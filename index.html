@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dorkify</title>
+    <style>
+        /* Overall Page Style */
+        body {
+            background-color: #202124;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Dorkify Title */
+        h1 {
+            font-size: 64px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+
+        /* Search Container */
+        #search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        /* Search Input Styling */
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            padding-right: 50px; /* Space for the mic button */
+            border-radius: 25px;
+            border: none;
+            outline: none;
+            font-size: 18px;
+            color: #fff;
+            background-color: #3c4043;
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        /* Mic Button Inside the Search Box */
+        #mic-button {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #007BFF;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Breathing Animation for Search Box */
+        @keyframes breathing {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 123, 255, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 123, 255, 1);
+            }
+        }
+
+        /* Activated Search Box Breathing Effect */
+        .breathing {
+            animation: breathing 2s infinite;
+            border-radius: 25px;
+            padding: 3px; /* Visible breathing effect around the search box */
+        }
+
+        /* Generate Button Styling */
+        #generate-button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px; /* Equal spacing below search bar */
+        }
+
+        #generate-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Markdown Box for Generated Dork */
+        #generated-dork-container {
+            display: flex;
+            align-items: center;
+            background-color: #282a36;
+            border: 1px solid #444;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            color: #f8f8f2;
+        }
+
+        #generated-dork {
+            flex-grow: 1;
+            font-family: monospace;
+            overflow-wrap: break-word;
+        }
+
+        /* Copy Button */
+        #copy-button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Results Container */
+        #results {
+            margin-top: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #3c4043;
+            color: #fff;
+        }
+
+        .result a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .result a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Title -->
+    <h1>Dorkify</h1>
+
+    <!-- Search Container -->
+    <div id="search-container" class="">
+        <input id="query" type="text" placeholder="Enter your search term" />
+        <button id="mic-button" onclick="startVoiceRecognition()">🎤</button>
+    </div>
+
+    <!-- Generate Dork Button -->
+    <button id="generate-button" onclick="generateDork()">Generate Dork</button>
+
+    <!-- Markdown-style Generated Dork Box -->
+    <div id="generated-dork-container" style="display: none;">
+        <div id="generated-dork"></div>
+        <button id="copy-button" onclick="copyDork()">Copy</button>
+    </div>
+
+    <!-- Search Results -->
+    <div id="results"></div>
+
+    <script>
+        let recognition;
+
+        // Voice Recognition Setup
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                document.getElementById('search-container').classList.add('breathing');
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('query').value = transcript;
+                document.getElementById('search-container').classList.remove('breathing');
+            };
+
+            recognition.onend = function() {
+                document.getElementById('search-container').classList.remove('breathing');
+            };
+
+            recognition.onerror = function(event) {
+                alert("Error with voice recognition: " + event.error);
+                document.getElementById('search-container').classList.remove('breathing');
+            };
+        }
+
+        // Start Voice Recognition
+        function startVoiceRecognition() {
+            if (recognition) {
+                recognition.start();
+            } else {
+                alert("Voice recognition is not supported in this browser.");
+            }
+        }
+
+        // Generate the Google Dork
+        async function generateDork() {
+    const query = document.getElementById('query').value;
+    if (!query) {
+        alert("Please enter a search term.");
+        return;
+    }
+
+    // Show a loading message
+    const generatedDorkContainer = document.getElementById('generated-dork-container');
+    const generatedDorkElement = document.getElementById('generated-dork');
+    const resultsDiv = document.getElementById('results');
+    generatedDorkContainer.style.display = 'flex';
+    generatedDorkElement.textContent = 'Generating dork...';
+    resultsDiv.innerHTML = '';
+
+    try {
+        // Call the backend API
+        const response = await fetch('http://localhost:3000/generate-dork', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ searchTerm: query }),
+        });
+
+        const data = await response.json();
+
+        if (data.dork) {
+            // Display the dynamically generated Google Dork
+            generatedDorkElement.textContent = data.dork;
+
+            // Optionally, fetch results based on the generated dork
+            fetchResults(data.dork);
+        } else {
+            generatedDorkElement.textContent = 'Failed to generate a dork.';
+        }
+    } catch (error) {
+        console.error('Error generating dork:', error);
+        generatedDorkElement.textContent = 'Error generating dork. Please try again.';
+    }
+}
+
+        // Copy Generated Dork to Clipboard
+        function copyDork() {
+            const dorkText = document.getElementById('generated-dork').textContent;
+            navigator.clipboard.writeText(dorkText).then(() => {
+                alert("Copied to clipboard!");
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        // Fetch results based on the query
+        async function fetchResults(query) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}&filetype=pdf`);
+                const data = await response.json();
+
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p>No results found.</p>';
+                } else {
+                    resultsDiv.innerHTML = data
+                        .map(
+                            item =>
+                                `<div class="result">
+                                    <h3><a href="${item.link}" target="_blank">${item.title}</a></h3>
+                                    <p>${item.snippet}</p>
+                                </div>`
+                        )
+                        .join('');
+                }
+            } catch (error) {
+                console.error(error);
+                resultsDiv.innerHTML = '<p>Failed to fetch results. Please try again later.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
