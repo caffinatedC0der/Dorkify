@@ -19,8 +19,6 @@ Account Features: Save and manage your custom dorks in your personal account.
 Search Engine Expansion: Extend dorking capabilities to other search engines for even greater flexibility.
 
 
-## Screenshots
 
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
 
 
